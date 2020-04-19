@@ -43,7 +43,11 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
             }
         }
 
-        if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+        if (
+            process.env.NODE_ENV === 'development' ||
+            process.env.NODE_ENV === 'test' ||
+            process.env.HEROKU_ENV === 'development'
+        ) {
             Sequelize.options.logging = false;
             const revert = await seeder.down({ to: 0 });
             const pendingSeeders = await seeder.pending();
@@ -169,8 +173,9 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
 
 // import Oauth module and load into cache
 import OAuth from './app/modules/Oauth';
+const fireStoreEnv = process.env.HEROKU_ENV ?? 'local';
 firestore
-    .collection('env/' + process.env.REACT_APP_FIRESTORE_ENVIRONMENT + '/oauthproviders')
+    .collection('env/' + fireStoreEnv + '/oauthproviders')
     .get()
     // eslint-disable-next-line
     .then((providers: any) => {
