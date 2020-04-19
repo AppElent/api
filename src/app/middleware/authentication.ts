@@ -70,7 +70,7 @@ const checkAuthenticated = async (req: CustomRequest, res: Response, options: an
     }
 
     // Dev environment no authentication required
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || process.env.HEROKU_ENV === 'development') {
         logging.info('Authentication passed (ENV=dev)');
         const uid = req.query.user ?? 'p1ezZHQBsyWQDYm9BrCm2wlpP1o1';
         return {
