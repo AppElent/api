@@ -40,6 +40,9 @@ app.use('/api/custom', customController);
 import tadoController from './controllers/tado.controller';
 app.use('/api/tado', tadoController);
 
+import migrationController from './controllers/migrations.controller';
+app.use('/api/migrations', migrationController);
+
 //DarkSky
 //app.use('/api/darksky', require('./controllers/darksky.controller'));
 

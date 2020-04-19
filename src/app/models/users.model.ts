@@ -23,7 +23,7 @@ User.init(
             allowNull: true,
         },
         email: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             allowNull: true,
         },
         lastlogon: {
