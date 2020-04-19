@@ -167,6 +167,7 @@ app.use(logger('dev', { stream: new LoggerStream() }));
 const whitelist = ['http://localhost', 'https://appelent.com'];
 const corsOptions = {
     origin: function(origin: any, callback: any) {
+        console.log(whitelist, origin);
         if (whitelist.indexOf(origin) !== -1 || !origin) {
             callback(null, true);
         } else {
