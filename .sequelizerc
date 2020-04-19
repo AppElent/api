@@ -1,0 +1,5 @@
+var path = require('path');
+
+const sequelizerc = require('./src/config/database/sequelizerc');
+
+module.exports = sequelizerc;

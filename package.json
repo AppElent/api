@@ -1,0 +1,103 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "description": "AppElent API",
+  "main": "./dist/index.js",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch",
+    "test": "test",
+    "lint": "eslint --ext=jsx,ts,tsx,js src",
+    "lint:fix": "eslint --ext=jsx,ts,tsx,js src --fix",
+    "start": "ts-node src/server.ts",
+    "start:watch": "nodemon --exec ts-node ./src/server",
+    "start:heroku:dev": "cross-env NODE_ENV=herokudev ts-node src/server.ts",
+    "start:heroku:staging": "cross-env NODE_ENV=herokustaging ts-node src/server.ts",
+    "start:heroku:prod": "cross-env NODE_ENV=herokuprod ts-node src/server.ts",
+    "serve": "node dist/server.js",
+    "serve:heroku:dev": "cross-env NODE_ENV=herokudev node dist/server.js",
+    "serve:heroku:staging": "cross-env NODE_ENV=herokustaging node dist/server.js",
+    "serve:heroku:prod": "cross-env NODE_ENV=herokuprod node dist/server.js",
+    "build": "npm run lint && tsc"
+  },
+  "nodemonConfig": {
+    "ext": "js, ts",
+    "ignore": [
+      "src/app/bunq/*",
+      "*.sqlite"
+    ],
+    "watch": [
+      "src"
+    ],
+    "delay": "2500"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericjansen1988/api.git"
+  },
+  "keywords": [
+    "API"
+  ],
+  "author": "App-Elent",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ericjansen1988/api/issues"
+  },
+  "homepage": "https://github.com/ericjansen1988/api#readme",
+  "dependencies": {
+    "@bunq-community/bunq-js-client": "^1.1.1",
+    "axios": "^0.19.2",
+    "cookie-parser": "^1.4.5",
+    "dotenv": "^8.2.0",
+    "enelogic": "^0.1.7",
+    "express": "^4.17.1",
+    "firebase-admin": "^8.10.0",
+    "https": "^1.0.0",
+    "json-store": "^1.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.15",
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.28",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.0",
+    "node-forge": "^0.9.1",
+    "pg": "^7.18.2",
+    "sequelize": "^5.21.6",
+    "simple-oauth2": "^3.4.0",
+    "solaredge": "^0.1.7",
+    "swagger-ui-express": "^4.1.4",
+    "umzug": "^2.3.0",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.30",
+    "@types/cookie-parser": "^1.4.2",
+    "@types/express": "^4.17.6",
+    "@types/http-errors": "^1.6.3",
+    "@types/jsonwebtoken": "^8.3.9",
+    "@types/lodash": "^4.14.149",
+    "@types/moment-timezone": "^0.5.13",
+    "@types/morgan": "^1.9.0",
+    "@types/node": "^13.11.1",
+    "@types/node-forge": "^0.9.3",
+    "@types/pg": "^7.14.3",
+    "@types/simple-oauth2": "^2.5.2",
+    "@types/swagger-jsdoc": "^3.0.2",
+    "@types/swagger-ui-express": "^4.1.2",
+    "@types/umzug": "^2.2.3",
+    "@types/validator": "^12.0.1",
+    "@typescript-eslint/eslint-plugin": "^2.28.0",
+    "@typescript-eslint/parser": "^2.28.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.3",
+    "nodemon": "^2.0.3",
+    "prettier": "^1.19.1",
+    "sqlite3": "^4.1.1",
+    "ts-node": "^8.8.2",
+    "typescript": "^3.8.3"
+  },
+  "typings": "src/typings/*.d.ts"
+}
