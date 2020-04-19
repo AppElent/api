@@ -1,13 +1,14 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
 import { lowerCaseQueryParams, create404Error, errorHandler } from './app/modules/express-collection';
 import Bunq from './app/modules/Bunq';
 import { logging, LoggerStream } from './app/modules/Logging';
 
-import Sequelize, { User, Bunq as BunqModel, migrator, seeder } from './app/models';
+import Sequelize, { User, Bunq as BunqModel } from './app/models';
 
 /**
  * Application cache
@@ -29,38 +30,6 @@ import { firestore, auth } from './app/modules/Firebase';
 const forceUpdate = process.env.NODE_ENV === 'test' ? true : false;
 Sequelize.sync({ force: forceUpdate }).then(async () => {
     logging.info('Sync sequelize models with { force: ' + forceUpdate + ' }');
-
-    /**
-     * Run migrator and seeder
-     */
-    try {
-        if (!forceUpdate) {
-            const pendingMigrations = await migrator.pending();
-            if (pendingMigrations.length > 0) {
-                logging.info('There are ' + pendingMigrations.length + ' migrations pending');
-                console.log(pendingMigrations);
-                await migrator.up();
-            }
-        }
-
-        if (
-            process.env.NODE_ENV === 'development' ||
-            process.env.NODE_ENV === 'test' ||
-            process.env.HEROKU_ENV === 'development'
-        ) {
-            Sequelize.options.logging = false;
-            const revert = await seeder.down({ to: 0 });
-            const pendingSeeders = await seeder.pending();
-            if (pendingSeeders.length > 0) {
-                logging.info('Seeding: ' + pendingSeeders.length + ' seeders will be executed.');
-                await seeder.up();
-            }
-            Sequelize.options.logging = logging.info.bind(logging);
-        }
-    } catch (error) {
-        logging.error('Error running migration and/or seeder. See below for details');
-        console.log(error);
-    }
 
     /**
      * Create all users who not exist in database (from firebase)
@@ -112,10 +81,8 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
             };
             const founduser = await User.findByPk(user.id);
             if (founduser) {
-                logging.info('User ' + userdata.uid + ' is updated');
                 await founduser.update(object);
             } else {
-                logging.info('User ' + userdata.uid + ' is created');
                 await User.create(object);
             }
         });
@@ -196,6 +163,20 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev', { stream: new LoggerStream() }));
+
+const whitelist = ['http://localhost:3000', 'https://appelent.com'];
+const corsOptions = {
+    origin: function(origin: any, callback: any) {
+        if (whitelist.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            logging.error('Origin now allowed by CORS (' + origin + ')');
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
