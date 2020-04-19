@@ -8,7 +8,7 @@ import { lowerCaseQueryParams, create404Error, errorHandler } from './app/module
 import Bunq from './app/modules/Bunq';
 import { logging, LoggerStream } from './app/modules/Logging';
 
-import Sequelize, { User, Bunq as BunqModel, migrator, seeder } from './app/models';
+import Sequelize, { User, Bunq as BunqModel } from './app/models';
 
 /**
  * Application cache
@@ -167,10 +167,10 @@ app.use(logger('dev', { stream: new LoggerStream() }));
 const whitelist = ['http://localhost:3000', 'https://appelent.com'];
 const corsOptions = {
     origin: function(origin: any, callback: any) {
-        console.log(whitelist, origin);
         if (whitelist.indexOf(origin) !== -1 || !origin) {
             callback(null, true);
         } else {
+            logging.error('Origin now allowed by CORS (' + origin + ')');
             callback(new Error('Not allowed by CORS'));
         }
     },
