@@ -1,5 +1,35 @@
 const fs = require('fs'); //eslint-disable-line
 
+const getEnv = argv => {
+    let found = false;
+    for (const arg of argv) {
+        //console.log(arg);
+        if (found) {
+            return arg;
+        }
+        if (arg.toLowerCase() === '--env') {
+            found = true;
+        }
+    }
+    return 'development';
+};
+
+const asyncFunction = async () => {
+    return 'ok';
+};
+
+const up = queryInterface => {
+    return asyncFunction();
+};
+
+const down = queryInterface => {
+    return asyncFunction();
+};
+
+const sync = Sequelize => {
+    return Sequelize.sync({ force: true });
+};
+
 const getJSON = filename => {
     const content = fs.readFileSync(__dirname + '/' + filename);
     const result = JSON.parse(content);
@@ -71,6 +101,8 @@ const runSeeder = async (number, options) => {
 };
 
 module.exports = {
+    down,
+    getEnv,
     getJSON,
     getRandomDate,
     getRandomInt,
@@ -78,4 +110,6 @@ module.exports = {
     oneOf,
     runSeeder,
     runSeederFromObject,
+    sync,
+    up,
 };

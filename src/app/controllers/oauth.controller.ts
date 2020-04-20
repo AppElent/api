@@ -88,6 +88,43 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
 };
 
 /**
+ * Receiver
+ * @param req
+ * @param res
+ */
+const receiver = async (req: Request, res: Response): Promise<Response | void> => {
+    const oauthobject = getAppData('oauth.' + req.params.application);
+    if (!oauthobject) {
+        throw new Error('OauthProvider ' + req.params.application + ' not found!');
+    }
+
+    if (!req.query.code) {
+        return res.status(400).send({
+            success: false,
+            message: 'No code preent',
+        });
+    }
+    if (!req.query.state) {
+        return res.status(400).send({
+            success: false,
+            message: 'No state preent',
+        });
+    }
+    if (req.body.state) {
+        logging.info('State parameter is' + req.body.state);
+        try {
+            const decoded: any = jwt.verify(req.query.state as string, key);
+            if (decoded.redirectUrl) {
+                return res.redirect(decoded.redirectUrl);
+            }
+        } catch (err) {
+            logging.error('Unable to verify JWT');
+            return res.status(400).send({ success: false, message: err });
+        }
+    }
+};
+
+/**
  * Refresh oauth token
  * @param req Request object from Express
  * @param res Response object from Express

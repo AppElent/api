@@ -7,7 +7,7 @@ import SimpleOauth2, {
     PasswordTokenConfig,
 } from 'simple-oauth2';
 
-interface CustomModuleOptions extends ModuleOptions {
+interface CustomOptions {
     flow: 'authorization' | 'password' | 'client_credentials';
     redirect_url: string;
     defaultScope: string;
@@ -29,8 +29,8 @@ export default class Oauth {
     public defaultScope: string;
     public redirectUrl: string;
 
-    constructor(options: CustomModuleOptions) {
-        const { flow, redirect_url, defaultScope, ...credentials } = options; //eslint-disable-line
+    constructor(credentials: ModuleOptions, options: CustomOptions) {
+        const { flow, redirect_url, defaultScope } = options; //eslint-disable-line
         this.flow = flow;
         this.redirectUrl = redirect_url; //eslint-disable-line
         this.defaultScope = defaultScope;
