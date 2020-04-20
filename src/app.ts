@@ -28,7 +28,7 @@ import { firestore, auth } from './app/modules/Firebase';
 /* Database configuratie */
 // force: true will drop the table if it already exists
 const forceUpdate = process.env.NODE_ENV === 'test' ? true : false;
-Sequelize.sync({ force: forceUpdate }).then(async () => {
+Sequelize.sync({ force: true }).then(async () => {
     logging.info('Sync sequelize models with { force: ' + forceUpdate + ' }');
 
     /**
