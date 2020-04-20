@@ -54,3 +54,4 @@ export { default as Bunq } from './bunq.model';
 export { default as Demo } from './demo.model';
 export { default as Events } from './events.model';
 export { default as Meterstanden } from './meterstanden.model';
+export { default as OauthProvider } from './oauthproviders.model';

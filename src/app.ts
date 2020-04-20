@@ -8,7 +8,8 @@ import { lowerCaseQueryParams, create404Error, errorHandler } from './app/module
 import Bunq from './app/modules/Bunq';
 import { logging, LoggerStream } from './app/modules/Logging';
 
-import Sequelize, { User, Bunq as BunqModel } from './app/models';
+import Sequelize, { User, Bunq as BunqModel, OauthProvider, migrator, seeder } from './app/models';
+import OAuth from './app/modules/Oauth';
 
 /**
  * Application cache
@@ -30,6 +31,17 @@ import { firestore, auth } from './app/modules/Firebase';
 const forceUpdate = process.env.NODE_ENV === 'test' ? true : false;
 Sequelize.sync({ force: true }).then(async () => {
     logging.info('Sync sequelize models with { force: ' + forceUpdate + ' }');
+
+    //Load all oauthproviders
+    const providers = await OauthProvider.findAll();
+    setAppData('oauth', {});
+    // eslint-disable-next-line
+    providers.forEach((provider: any) => {
+        logging.info('OAuth provider ' + provider.id + ' loaded');
+        const { credentials, ...options } = provider;
+        const oauthprovider = new OAuth(JSON.parse(credentials), options);
+        setAppData('oauth.' + provider.id, oauthprovider);
+    });
 
     /**
      * Create all users who not exist in database (from firebase)
@@ -139,7 +151,7 @@ Sequelize.sync({ force: true }).then(async () => {
 });
 
 // import Oauth module and load into cache
-import OAuth from './app/modules/Oauth';
+/*
 const fireStoreEnv = process.env.HEROKU_ENV ?? 'local';
 firestore
     .collection('env/' + fireStoreEnv + '/oauthproviders')
@@ -155,6 +167,7 @@ firestore
             setAppData('oauth.' + provider.id, oauthprovider);
         });
     });
+*/
 const app = express();
 export default app;
 
