@@ -177,7 +177,12 @@ app.set('view engine', 'pug');
 
 app.use(logger('dev', { stream: new LoggerStream() }));
 
-const whitelist = ['http://localhost:3000', 'https://administratie.appelent.com'];
+const whitelist = [
+    'http://localhost:3000',
+    'https://administratie.appelent.com',
+    'https://dev.administratie.appelent.com',
+    'https://staging.administratie.appelent.com',
+];
 const corsOptions = {
     origin: function(origin: any, callback: any) {
         if (whitelist.indexOf(origin) !== -1 || !origin) {
