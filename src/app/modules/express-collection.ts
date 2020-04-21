@@ -12,8 +12,8 @@ export const loggerMiddleware = (logger?: (text: string) => void) => (req: Reque
     next();
 };
 
-export const create404Error = (req: Request, res: Response, next: NextFunction): void => {
-    next(createError(404));
+export const create404Error = (req: Request, res: Response, next: NextFunction): Response => {
+    return res.status(404).send({success: false, message: 'Route not found'});
 };
 
 export const lowerCaseQueryParams = (req: Request, res: Response, next: NextFunction): void => {
