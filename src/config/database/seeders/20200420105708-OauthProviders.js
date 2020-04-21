@@ -20,22 +20,22 @@ const settings = {
     },
     herokudev: {
         enelogic: {
-            id: '5664_623x56if1d8o0gogsg40sg0ksgg8804skoc8s8gwsgwcoc8cc8',
+            id: '7215_2490w4fydvfow08ssww0ggss8084w4kkkkcggsggw88w00cwck',
             secret: process.env.ENELOGIC_DEV_SECRET,
-            redirectUrl: 'https://dev-administratie.firebaseapp.com/oauth/exchange/enelogic',
+            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/enelogic',
         },
         bunq: {
-            redirectUrl: 'https://dev-administratie.firebaseapp.com/oauth/exchange/bunq',
+            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/bunq',
         },
     },
     herokustaging: {
         enelogic: {
-            id: '5664_623x56if1d8o0gogsg40sg0ksgg8804skoc8s8gwsgwcoc8cc8',
+            id: '7216_16ajgg19kark8csw4sss08400soccw4880o448w0cs040s00ow',
             secret: process.env.ENELOGIC_STAGING_SECRET,
-            redirectUrl: 'https://staging-administratie.firebaseapp.com/oauth/exchange/enelogic',
+            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/enelogic',
         },
         bunq: {
-            redirectUrl: 'https://staging-administratie.firebaseapp.com/oauth/exchange/bunq',
+            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/bunq',
         },
     },
     herokuprod: {

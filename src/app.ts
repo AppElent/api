@@ -38,8 +38,8 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
     // eslint-disable-next-line
     providers.forEach((provider: any) => {
         logging.info('OAuth provider ' + provider.id + ' loaded');
-        const { credentials, ...options } = provider;
-        const oauthprovider = new OAuth(JSON.parse(credentials), options);
+        const { credentials, redirectUrl, defaultScope, flow, ...options } = provider;
+        const oauthprovider = new OAuth(JSON.parse(credentials), { redirectUrl, flow, defaultScope });
         setAppData('oauth.' + provider.id, oauthprovider);
     });
 

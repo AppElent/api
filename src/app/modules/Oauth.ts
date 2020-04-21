@@ -9,7 +9,7 @@ import SimpleOauth2, {
 
 interface CustomOptions {
     flow: 'authorization' | 'password' | 'client_credentials';
-    redirect_url: string;
+    redirectUrl: string;
     defaultScope: string;
 }
 
@@ -30,9 +30,9 @@ export default class Oauth {
     public redirectUrl: string;
 
     constructor(credentials: ModuleOptions, options: CustomOptions) {
-        const { flow, redirect_url, defaultScope } = options; //eslint-disable-line
+        const { flow, redirectUrl, defaultScope } = options; //eslint-disable-line
         this.flow = flow;
-        this.redirectUrl = redirect_url; //eslint-disable-line
+        this.redirectUrl = redirectUrl; //eslint-disable-line
         this.defaultScope = defaultScope;
         this.credentials = credentials;
         this.oauth = SimpleOauth2.create(this.credentials);
