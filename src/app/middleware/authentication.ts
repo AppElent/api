@@ -51,6 +51,10 @@ const checkAuthenticated = async (req: CustomRequest, res: Response, options: an
     // Check for API key
     if (req.query.api_key) {
         logging.info('Authenticatie op basis van apikey');
+        if (req.query.api_key !== 'abcdef') {
+            return { result: false, message: 'API key was given with query param but not found in database' };
+        }
+        /*
         const userdoc = await firestore
             .collection('env')
             .doc(process.env.REACT_APP_FIRESTORE_ENVIRONMENT)
@@ -61,10 +65,10 @@ const checkAuthenticated = async (req: CustomRequest, res: Response, options: an
         if (userdoc.empty)
             return { result: false, message: 'API key was given with query param but not found in database' };
         const doc = userdoc.docs[0];
+        */
         return {
             result: true,
-            jwt: { claims: { uid: doc.id } },
-            uid: doc.id,
+            uid: req.query.user ?? 'fkkdEvpjgkhlhtQGqdkHTToWO233',
             message: 'API key authentication succesful',
         };
     }

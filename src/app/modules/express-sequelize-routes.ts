@@ -97,17 +97,26 @@ export default class SequelizeRoutes {
         req: any,
         res: any,
     ): Promise<any> => {
-        console.log(0);
         try {
             //If no UID property on request object then return with forbidden error
             //if (req.uid === undefined) return res.status(401).send({ success: false, message: 'No token given' });
             options = this.checkOptions(options);
-            console.log(2);
             const body = req.body;
+            if (Array.isArray(body)) {
+                body.forEach(row => {
+                    row[options.userColumnName] = req[options.reqUserProperty];
+                });
+            }
             if (options.userColumnName) {
+                if (Array.isArray(body)) {
+                    body.forEach(row => {
+                        row[options.userColumnName] = req[options.reqUserProperty];
+                    });
+                    const result = await model.bulkCreate(body, { ignoreDuplicates: true });
+                    return res.send({ success: true, data: result });
+                }
                 body[options.userColumnName] = req[options.reqUserProperty];
             }
-            console.log(body, model);
             const entry = await model.create(body);
             return res.send({ success: true, data: entry });
         } catch (err) {
