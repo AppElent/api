@@ -24,7 +24,7 @@ export const getAppData = (key: string): any => {
 };
 
 //Load firebase
-import { firestore, auth } from './app/modules/Firebase';
+import { firestore } from './app/modules/Firebase';
 
 /* Database configuratie */
 // force: true will drop the table if it already exists
@@ -175,7 +175,7 @@ export default app;
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 
-app.use(logger('dev', { stream: new LoggerStream() }));
+app.use(logger(':method :url :status :response-time ms - :res[content-length]', { stream: new LoggerStream() }));
 
 const whitelist = [
     'http://localhost:3000',
@@ -207,6 +207,7 @@ app.use(bodyParser.json()); // Parses JSON in body
 app.use(lowerCaseQueryParams); // Makes all query params lowercase
 
 app.get('/health-check', (req: Request, res: Response) => res.sendStatus(200)); //certificate route & simple health check
+app.get('/favicon.ico', (req: Request, res: Response) => res.sendStatus(204));
 
 import './app/routes';
 

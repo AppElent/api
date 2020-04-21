@@ -41,18 +41,22 @@ const checkAuthenticated = async (req: CustomRequest, res: Response, options: an
                 result: true,
                 jwt: decodedToken,
                 uid: decodedToken.uid,
+                type: 'Firebase token',
                 message: 'Firebase authentication succesful',
             };
         } catch (err) {
-            return { result: false, message: err };
+            return { result: false, message: err, type: 'Firebase token' };
         }
     }
 
     // Check for API key
     if (req.query.api_key) {
-        logging.info('Authenticatie op basis van apikey');
         if (req.query.api_key !== 'abcdef') {
-            return { result: false, message: 'API key was given with query param but not found in database' };
+            return {
+                result: false,
+                type: 'API Key',
+                message: 'API key was given with query param but not found in database',
+            };
         }
         /*
         const userdoc = await firestore
@@ -70,21 +74,22 @@ const checkAuthenticated = async (req: CustomRequest, res: Response, options: an
             result: true,
             uid: req.query.user ?? 'fkkdEvpjgkhlhtQGqdkHTToWO233',
             message: 'API key authentication succesful',
+            type: 'API Key',
         };
     }
 
     // Dev environment no authentication required
     if (process.env.NODE_ENV === 'development' || process.env.HEROKU_ENV === 'development') {
-        logging.info('Authentication passed (ENV=dev)');
         const uid = req.query.user ?? 'fkkdEvpjgkhlhtQGqdkHTToWO233';
         return {
             result: true,
             uid,
             message: 'No authentication, environment=development.',
+            type: 'Development (no auth)',
         };
     }
 
-    return { result: false, message: 'No authentication present' };
+    return { result: false, message: 'No authentication present', type: 'No auth' };
 };
 
 const authenticationRequired = (options?: any) => (req: CustomRequest, res: Response, next: NextFunction): void => {
@@ -92,14 +97,14 @@ const authenticationRequired = (options?: any) => (req: CustomRequest, res: Resp
         if (authenticated.result === true) {
             req.jwt = authenticated.jwt;
             if (!authenticated.uid) {
-                return res.status(500).send('Succesful authentication but no user found.');
+                throw new Error('Succesful authentication but no user found.');
             }
             const uid = authenticated.uid;
-            logging.info('User ' + uid + ' successfully authenticated');
+            logging.info('User ' + uid + ' successfully authenticated (type: ' + authenticated.type + ')');
             req.uid = uid;
             next();
         } else {
-            logging.error('Authentication failed: ' + authenticated.message);
+            logging.error('Authentication failed (' + authenticated.type + '): ' + authenticated.message);
             return res.status(401).send({ success: false, statuscode: 401, message: authenticated.message });
         }
     });
