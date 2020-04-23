@@ -2,8 +2,10 @@
 
 require('dotenv').config();
 
-const { getEnv } = require('./index'); // eslint-disable-line
+const { getEnv, getEncryptionString } = require('./index'); // eslint-disable-line
 const { Sequelize } = require('sequelize'); // eslint-disable-line
+
+const encryptionKey = process.env.SEQUELIZE_ENCRYPTION_KEY;
 
 const env = getEnv(process.argv);
 
@@ -56,13 +58,20 @@ const oauthproviders = [
         defaultScope: 'account',
         flow: 'authorization',
         redirectUrl: settings[env].enelogic.redirectUrl,
-        credentials: JSON.stringify({
-            auth: { tokenHost: 'https://enelogic.com', tokenPath: '/oauth/v2/token', authorizePath: '/oauth/v2/auth' },
-            client: {
-                id: settings[env].enelogic.id,
-                secret: settings[env].enelogic.secret,
-            },
-        }),
+        credentials: getEncryptionString(
+            JSON.stringify({
+                auth: {
+                    tokenHost: 'https://enelogic.com',
+                    tokenPath: '/oauth/v2/token',
+                    authorizePath: '/oauth/v2/auth',
+                },
+                client: {
+                    id: settings[env].enelogic.id,
+                    secret: settings[env].enelogic.secret,
+                },
+            }),
+            encryptionKey,
+        ),
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -70,13 +79,16 @@ const oauthproviders = [
         id: 'bunq',
         flow: 'authorization',
         redirectUrl: settings[env].bunq.redirectUrl,
-        credentials: JSON.stringify({
-            auth: { tokenHost: 'https://oauth.bunq.com', tokenPath: '/v1/token', authorizePath: '/auth' },
-            client: {
-                id: '5592ac7c4f9b6ea8807bae74665d23d528b0c1f2cb9f1195f8b7a0a29b18f728',
-                secret: process.env.BUNQ_SECRET,
-            },
-        }),
+        credentials: getEncryptionString(
+            JSON.stringify({
+                auth: { tokenHost: 'https://oauth.bunq.com', tokenPath: '/v1/token', authorizePath: '/auth' },
+                client: {
+                    id: '5592ac7c4f9b6ea8807bae74665d23d528b0c1f2cb9f1195f8b7a0a29b18f728',
+                    secret: process.env.BUNQ_SECRET,
+                },
+            }),
+            encryptionKey,
+        ),
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -84,10 +96,16 @@ const oauthproviders = [
         id: 'tado',
         defaultScope: 'home.user',
         flow: 'password',
-        credentials: JSON.stringify({
-            auth: { tokenHost: 'https://auth.tado.com', tokenPath: '/oauth/token' },
-            client: { id: 'tado-web-app', secret: 'wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc' },
-        }),
+        credentials: getEncryptionString(
+            JSON.stringify({
+                auth: { tokenHost: 'https://auth.tado.com', tokenPath: '/oauth/token' },
+                client: {
+                    id: 'tado-web-app',
+                    secret: 'wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc',
+                },
+            }),
+            encryptionKey,
+        ),
         createdAt: new Date(),
         updatedAt: new Date(),
     },

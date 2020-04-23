@@ -1,4 +1,5 @@
 const fs = require('fs'); //eslint-disable-line
+const forge = require('node-forge'); //eslint-disable-line
 
 const getEnv = argv => {
     let found = false;
@@ -100,8 +101,75 @@ const runSeeder = async (number, options) => {
     return data;
 };
 
+const encryptString = (string, encryptionKey) => {
+    // create a random initialization vector
+    const iv = forge.random.getBytesSync(32);
+    // turn hex-encoded key into bytes
+    const encryptionKeyBytes = forge.util.hexToBytes(encryptionKey);
+    // create a new aes-cbc cipher with our key
+    const cipher = forge.cipher.createCipher('AES-CBC', encryptionKeyBytes);
+    // turn our string into a buffer
+    const buffer = forge.util.createBuffer(string, 'utf8');
+
+    cipher.start({ iv: iv });
+    cipher.update(buffer);
+    cipher.finish();
+
+    return {
+        iv: forge.util.bytesToHex(iv),
+        key: encryptionKey,
+        encryptedString: cipher.output.toHex(),
+    };
+};
+
+/**
+ * Decrypts a string using the key and iv
+ * @param encryptedString
+ * @param key Encryption key
+ * @param iv IV returned from the encrypt function
+ * @returns {string}
+ */
+const decryptString = (encryptedString, key, iv) => {
+    // get byte data from hex encoded strings
+    const encrypedBytes = forge.util.hexToBytes(encryptedString);
+    // create a new forge buffer using the bytes
+    const encryptedBuffer = forge.util.createBuffer(encrypedBytes, 'raw');
+    const keyBytes = forge.util.hexToBytes(key);
+    const ivBytes = forge.util.hexToBytes(iv);
+
+    // create a new decipher with our key and iv
+    const decipher = forge.cipher.createDecipher('AES-CBC', keyBytes);
+    decipher.start({ iv: ivBytes });
+    decipher.update(encryptedBuffer);
+
+    // check the decipher results
+    const result = decipher.finish();
+    if (!result) {
+        throw new Error('Failed to decrypt string, the encryption string might have changed');
+    }
+    // get the raw bytes from the forge buffer
+    const outputBytes = decipher.output.getBytes();
+
+    // turn forge bytes into a regular buffer
+    const nodeBuffer = Buffer.from(outputBytes, 'binary');
+
+    // return the result as an utf8-encoded string
+    return nodeBuffer.toString('utf8');
+};
+
+const getEncryptionString = (val, key) => {
+    const encrypted = encryptString(val, key);
+    return encrypted.iv + '~' + encrypted.encryptedString;
+};
+
+const getEncryptionValue = (val, key) => {
+    return !val ? null : decryptString(val.split('~')[1], key, val.split('~')[0]);
+};
+
 module.exports = {
     down,
+    getEncryptionString,
+    getEncryptionValue,
     getEnv,
     getJSON,
     getRandomDate,

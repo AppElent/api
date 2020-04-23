@@ -1,6 +1,10 @@
 import { Model, DataTypes } from 'sequelize';
 
 import Sequelize from './index';
+import Encryption from '../modules/Encryption';
+
+const encryptionKey = process.env.SEQUELIZE_ENCRYPTION_KEY;
+const encryption = new Encryption();
 
 export default class OauthProvider extends Model {
     public id: string;
@@ -20,8 +24,14 @@ OauthProvider.init(
             primaryKey: true,
         },
         credentials: {
-            type: DataTypes.STRING,
+            type: DataTypes.STRING(1000),
             allowNull: false,
+            set(this: OauthProvider, val: string): void {
+                this.setDataValue('credentials', encryption.getEncryptionString(val, encryptionKey));
+            },
+            get(this: OauthProvider): string {
+                return encryption.getEncryptionValue(this.getDataValue('credentials'), encryptionKey);
+            },
         },
         defaultScope: {
             type: DataTypes.STRING,
