@@ -9,24 +9,46 @@ import Encryption from '../modules/Encryption';
 const encryption = new Encryption();
 const key = encryption.generateRandomKey(32);
 
-import { getAppData } from '../../app';
+import { appData, getAppData, setAppData } from '../../app';
 import { basicAuthentication } from '../middleware/authentication';
 import { cacheMiddleware, asyncHandler } from '../modules/express-collection';
 import { logging } from '../modules/Logging';
+import OAuth, { CustomOptions } from '../modules/Oauth';
+import { OauthProvider } from '../models';
 
 const oauthCache = new Cache();
+
+const searchedForProvider: Array<string> = [];
+
+const loadOauthProvider = async (key: string): Promise<InstanceType<typeof OAuth>> => {
+    const oauthobject = getAppData('oauth.' + key);
+    if (oauthobject) {
+        return oauthobject;
+    }
+    if (searchedForProvider.includes(key)) {
+        logging.info('OAuth provider not found and already searched for.');
+        throw new Error('OauthProvider ' + key + ' not found! (tried more than once)');
+    }
+    const provider = await OauthProvider.findByPk(key);
+    if (provider) {
+        logging.info('OAuth provider ' + provider.id + ' loaded');
+        const { credentials, redirectUrl, defaultScope, flow } = provider;
+        const oauthprovider = new OAuth(JSON.parse(credentials), { redirectUrl, flow, defaultScope } as CustomOptions);
+        setAppData('oauth.' + provider.id, oauthprovider);
+        return oauthprovider;
+    } else {
+        searchedForProvider.push(key);
+        throw new Error('OauthProvider ' + key + ' not found!');
+    }
+};
 
 /**
  * Format the OAuth Url
  * @param req Request object from Express
  * @param res Response object from Express
  */
-const formatUrl = (req: Request, res: Response): Response => {
-    const oauthobject = getAppData('oauth.' + req.params.application);
-
-    if (!oauthobject) {
-        throw new Error('OauthProvider ' + req.params.application + ' not found!');
-    }
+const formatUrl = async (req: Request, res: Response): Promise<Response> => {
+    const oauthobject = await loadOauthProvider(req.params.application);
 
     // Authorization oauth2 URI
     const token = jwt.sign(
@@ -47,11 +69,8 @@ const formatUrl = (req: Request, res: Response): Response => {
  * @param res Response object from Express
  */
 const exchange = async (req: Request, res: Response): Promise<Response> => {
-    const oauthobject = getAppData('oauth.' + req.params.application);
+    const oauthobject = await loadOauthProvider(req.params.application);
 
-    if (!oauthobject) {
-        throw new Error('OauthProvider ' + req.params.application + ' not found!');
-    }
     let decoded;
     if (req.body.state) {
         logging.info('State paramter is' + req.body.state);
@@ -63,6 +82,17 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
         }
     }
 
+    if (req.params.application.toLowerCase() === 'bunq') {
+        const bunqClient = getAppData('bunq').getGenericClient();
+        const authorizationCode = await bunqClient.exchangeOAuthToken(
+            oauthobject.credentials.client.id,
+            oauthobject.credentials.client.secret,
+            oauthobject.redirectUrl,
+            req.body.code,
+        );
+        return res.send({ success: true, data: { token: authorizationCode, state: decoded } });
+    }
+
     // Save the access token
     let getTokenConfig: any;
     if (oauthobject.flow === 'authorization') {
@@ -72,15 +102,8 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
     }
     try {
         const accessToken = await oauthobject.getToken(getTokenConfig);
-        const accessTokenObject = {
-            access_token: accessToken.token.access_token,
-            expires_at: accessToken.token.expires_at,
-            expires_in: accessToken.token.expires_in,
-            refresh_token: accessToken.token.refresh_token,
-            scope: accessToken.token.scope,
-            token_type: accessToken.token.token_type,
-        };
-        return res.send({ success: true, data: { token: accessTokenObject, state: decoded } });
+        console.log(accessToken.token);
+        return res.send({ success: true, data: { token: accessToken.token, state: decoded } });
     } catch (error) {
         console.log(error.message, error.output);
         return res.status(400).send({ success: false, message: error.message, output: error.output });
@@ -93,10 +116,7 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
  * @param res
  */
 const receiver = async (req: Request, res: Response): Promise<Response | void> => {
-    const oauthobject = getAppData('oauth.' + req.params.application);
-    if (!oauthobject) {
-        throw new Error('OauthProvider ' + req.params.application + ' not found!');
-    }
+    const oauthobject = await loadOauthProvider(req.params.application);
 
     if (!req.query.code) {
         return res.status(400).send({
@@ -130,30 +150,26 @@ const receiver = async (req: Request, res: Response): Promise<Response | void> =
  * @param res Response object from Express
  */
 const refresh = async (req: Request, res: Response): Promise<Response> => {
-    const oauthobject = getAppData('oauth.' + req.params.application);
+    const oauthobject = await loadOauthProvider(req.params.application);
 
-    if (!oauthobject) {
-        throw new Error('OauthProvider ' + req.params.application + ' not found!');
-    }
     try {
         const accessToken = await oauthobject.refresh(req.body);
-        const accessTokenObject = {
-            access_token: accessToken.token.access_token,
-            expires_at: accessToken.token.expires_at,
-            expires_in: accessToken.token.expires_in,
-            refresh_token: accessToken.token.refresh_token,
-            scope: accessToken.token.scope,
-            token_type: accessToken.token.token_type,
-        };
-        return res.send({ success: true, data: { token: accessTokenObject } });
+        if (!accessToken) {
+            return res.send({ success: true, data: req.body });
+        }
+        return res.send({ success: true, data: { token: accessToken.token } });
     } catch (error) {
-        console.log(error);
+        logging.error(error);
         return res.status(400).send({ success: false, message: error.message, output: error.output });
     }
 };
 
 router.use(basicAuthentication);
-router.get('/formatUrl/:application', cacheMiddleware(oauthCache, { log: true, logger: logging.info }), formatUrl);
+router.get(
+    '/formatUrl/:application',
+    cacheMiddleware(oauthCache, { log: true, logger: logging.info }),
+    asyncHandler(formatUrl),
+);
 router.post('/exchange/:application', asyncHandler(exchange));
 router.post('/refresh/:application', asyncHandler(refresh));
 

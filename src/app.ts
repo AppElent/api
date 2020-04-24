@@ -100,15 +100,15 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
         });
     });
 
-    /*
     /**
      * Bunq clients laden
      * inclusief genericClient
-     
+     */
     const bunq = new Bunq(path.resolve(__dirname, './config/bunq'));
     // Generieke client starten
     bunq.loadGenericClient();
-
+    setAppData('bunq', bunq); // naar onderen als de anderen ook geladen moeten worden
+    /*
     //laden van de BUNQ clients
     (async (): Promise<void> => {
         //alle clients laden
