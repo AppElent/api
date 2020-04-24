@@ -7,7 +7,7 @@ import SimpleOauth2, {
     PasswordTokenConfig,
 } from 'simple-oauth2';
 
-interface CustomOptions {
+export interface CustomOptions {
     flow: 'authorization' | 'password' | 'client_credentials';
     redirectUrl: string;
     defaultScope: string;
@@ -23,8 +23,8 @@ type FormatUrlOptions = {
 };
 
 export default class Oauth {
-    private credentials: ModuleOptions;
-    private oauth: OAuthClient;
+    public credentials: ModuleOptions;
+    public oauth: OAuthClient;
     public flow: string;
     public defaultScope: string;
     public redirectUrl: string;
@@ -62,10 +62,11 @@ export default class Oauth {
             const authorizationTokenConfig: AuthorizationTokenConfig = {
                 code: options.code,
                 redirect_uri: url, // eslint-disable-line
-                scope: options.scope ?? this.defaultScope ?? '',
+                //scope: options.scope ?? this.defaultScope ?? '',
             };
-            if (this.defaultScope) {
-                authorizationTokenConfig['scope'] = this.defaultScope;
+            const scope = options.scope ?? this.defaultScope;
+            if (scope) {
+                authorizationTokenConfig.scope = scope;
             }
             result = await this.oauth.authorizationCode.getToken(authorizationTokenConfig);
         } else if (this.flow === 'password') {
@@ -80,7 +81,7 @@ export default class Oauth {
         return accessToken;
     }
 
-    async refresh(accessToken: AccessToken): Promise<AccessToken> {
+    async refresh(accessToken: AccessToken, options?: { force: boolean }): Promise<AccessToken | undefined> {
         const tokenObject: Token = {
             access_token: accessToken.token.access_token, // eslint-disable-line
             refresh_token: accessToken.token.refresh_token, // eslint-disable-line
@@ -89,9 +90,10 @@ export default class Oauth {
         let accessTokenObject: AccessToken = this.oauth.accessToken.create(tokenObject);
 
         // Check if the token is expired. If expired it is refreshed.
-        if (accessTokenObject.expired()) {
-            console.log('expired', accessTokenObject);
+        if (accessTokenObject.expired() || options?.force) {
             accessTokenObject = await accessTokenObject.refresh();
+        } else {
+            return;
         }
         return accessTokenObject;
     }

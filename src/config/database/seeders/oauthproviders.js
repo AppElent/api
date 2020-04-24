@@ -19,6 +19,9 @@ const settings = {
         bunq: {
             redirectUrl: 'https://localhost:3000/oauth/exchange/bunq',
         },
+        microsoft: {
+            redirectUrl: 'http://localhost:3000/oauth/exchange/microsoft',
+        },
     },
     herokudev: {
         enelogic: {
@@ -28,6 +31,9 @@ const settings = {
         },
         bunq: {
             redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/bunq',
+        },
+        microsoft: {
+            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/microsoft',
         },
     },
     herokustaging: {
@@ -39,6 +45,9 @@ const settings = {
         bunq: {
             redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/bunq',
         },
+        microsoft: {
+            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/microsoft',
+        },
     },
     herokuprod: {
         enelogic: {
@@ -48,6 +57,9 @@ const settings = {
         },
         bunq: {
             redirectUrl: 'https://administratie.appelent.com/oauth/exchange/bunq',
+        },
+        microsoft: {
+            redirectUrl: 'https://administratie.appelent.com/oauth/exchange/microsoft',
         },
     },
 };
@@ -86,6 +98,9 @@ const oauthproviders = [
                     id: '5592ac7c4f9b6ea8807bae74665d23d528b0c1f2cb9f1195f8b7a0a29b18f728',
                     secret: process.env.BUNQ_SECRET,
                 },
+                options: {
+                    bodyFormat: 'json',
+                },
             }),
             encryptionKey,
         ),
@@ -109,10 +124,33 @@ const oauthproviders = [
         createdAt: new Date(),
         updatedAt: new Date(),
     },
+    {
+        id: 'microsoft',
+        defaultScope: 'openid profile offline_access user.read',
+        flow: 'authorization',
+        redirectUrl: settings[env].microsoft.redirectUrl,
+        credentials: getEncryptionString(
+            JSON.stringify({
+                auth: {
+                    tokenHost: 'https://login.microsoftonline.com',
+                    tokenPath: '/common/oauth2/v2.0/token',
+                    authorizePath: '/common/oauth2/v2.0/authorize',
+                },
+                client: {
+                    id: '617c077e-9051-4972-ad34-eed0417950e1',
+                    secret: process.env.MICROSOFT_SECRET,
+                },
+            }),
+            encryptionKey,
+        ),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
 ];
 
 module.exports = {
-    up: queryInterface => {
+    up: async queryInterface => {
+        await queryInterface.bulkDelete('oauthproviders', null, {});
         return queryInterface.bulkInsert('oauthproviders', oauthproviders);
     },
 

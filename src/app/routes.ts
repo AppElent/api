@@ -43,6 +43,9 @@ app.use('/api/tado', tadoController);
 import migrationController from './controllers/migrations.controller';
 app.use('/api/migrations', migrationController);
 
+import microsoftController from './controllers/microsoft.controller';
+app.use('/api/microsoft', microsoftController);
+
 //DarkSky
 //app.use('/api/darksky', require('./controllers/darksky.controller'));
 
