@@ -3,7 +3,6 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import logger from 'morgan';
-import bodyParser from 'body-parser';
 import {
     lowerCaseQueryParams,
     create404Error,
@@ -201,6 +200,9 @@ const corsOptions = {
     },
 };
 
+/* Express configuration */
+app.use(express.json({ limit: '1mb' })); // Parses JSON in body
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -208,9 +210,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.static(path.join(__dirname, '../client/build')));
 
-/* Express configuration */
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-app.use(bodyParser.json({ limit: '200mb' })); // Parses JSON in body
 app.use(lowerCaseQueryParams); // Makes all query params lowercase
 if (process.env.NODE_ENV === 'production') app.use(httpRedirectMiddleware);
 
