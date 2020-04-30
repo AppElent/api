@@ -2,10 +2,8 @@
 
 require('dotenv').config();
 
-const { getEnv, getEncryptionString } = require('./index'); // eslint-disable-line
+const { generateRandomKey, getEnv, getEncryptionString, getEncryptionValue } = require('./index'); // eslint-disable-line
 const { Sequelize } = require('sequelize'); // eslint-disable-line
-
-const encryptionKey = process.env.SEQUELIZE_ENCRYPTION_KEY;
 
 const env = getEnv(process.argv);
 
@@ -22,6 +20,7 @@ const settings = {
         microsoft: {
             redirectUrl: 'http://localhost:3000/oauth/exchange/microsoft',
         },
+        encryptionKey: process.env.SEQUELIZE_ENCRYPTION_KEY,
     },
     herokudev: {
         enelogic: {
@@ -35,6 +34,7 @@ const settings = {
         microsoft: {
             redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/microsoft',
         },
+        encryptionKey: process.env.ENCRYPTION_KEY_DEV,
     },
     herokustaging: {
         enelogic: {
@@ -48,6 +48,7 @@ const settings = {
         microsoft: {
             redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/microsoft',
         },
+        encryptionKey: process.env.ENCRYPTION_KEY_STAGING,
     },
     herokuprod: {
         enelogic: {
@@ -61,8 +62,11 @@ const settings = {
         microsoft: {
             redirectUrl: 'https://administratie.appelent.com/oauth/exchange/microsoft',
         },
+        encryptionKey: process.env.ENCRYPTION_KEY_PROD,
     },
 };
+
+const encryptionKey = settings[env].encryptionKey;
 
 const oauthproviders = [
     {

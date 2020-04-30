@@ -166,8 +166,17 @@ const getEncryptionValue = (val, key) => {
     return !val ? null : decryptString(val.split('~')[1], key, val.split('~')[0]);
 };
 
+const generateRandomKey = keySize => {
+    // random bytes
+    const key = forge.random.getBytesSync(keySize);
+
+    // straight to hex and return it
+    return forge.util.bytesToHex(key);
+};
+
 module.exports = {
     down,
+    generateRandomKey,
     getEncryptionString,
     getEncryptionValue,
     getEnv,

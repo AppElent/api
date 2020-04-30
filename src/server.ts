@@ -20,11 +20,9 @@ process.env.NODE_ENV = NODE_ENV;
 
 const httpPort = process.env.PORT ?? 3001;
 const httpsPort = process.env.HTTPS_PORT ?? 3002;
-const httpRedirect = NODE_ENV === 'production' ? true : false;
 
 logging.info('HTTP Poort: ' + httpPort);
 logging.info('HTTPS Poort: ' + httpsPort);
-logging.info('HTTP redirect: ' + httpRedirect);
 
 import app from './app';
 //TODO: const debug = require('debug')('backend:server');
@@ -36,10 +34,5 @@ const server = https.createServer({}, app);
 server.listen(httpsPort);
 server.on('error', onError);
 server.on('listening', onListening);
-
-//TODO: is dit nog nodig?
-if (httpRedirect) {
-    app.use(httpRedirectMiddleware);
-}
 
 app.listen(httpPort);
