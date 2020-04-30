@@ -4,7 +4,12 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
-import { lowerCaseQueryParams, create404Error, errorHandler } from './app/modules/express-collection';
+import {
+    lowerCaseQueryParams,
+    create404Error,
+    errorHandler,
+    httpRedirect as httpRedirectMiddleware,
+} from './app/modules/express-collection';
 import Bunq from './app/modules/Bunq';
 import { logging, LoggerStream } from './app/modules/Logging';
 
@@ -39,8 +44,10 @@ Sequelize.sync({ force: forceUpdate }).then(async () => {
     providers.forEach((provider: any) => {
         logging.info('OAuth provider ' + provider.id + ' loaded');
         const { credentials, redirectUrl, defaultScope, flow } = provider;
-        const oauthprovider = new OAuth(JSON.parse(credentials), { redirectUrl, flow, defaultScope });
-        setAppData('oauth.' + provider.id, oauthprovider);
+        try {
+            const oauthprovider = new OAuth(JSON.parse(credentials), { redirectUrl, flow, defaultScope });
+            setAppData('oauth.' + provider.id, oauthprovider);
+        } catch {}
     });
 
     /**
@@ -202,9 +209,10 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 /* Express configuration */
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json()); // Parses JSON in body
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '200mb' })); // Parses JSON in body
 app.use(lowerCaseQueryParams); // Makes all query params lowercase
+if (process.env.NODE_ENV === 'production') app.use(httpRedirectMiddleware);
 
 app.get('/health-check', (req: Request, res: Response) => res.sendStatus(200)); //certificate route & simple health check
 app.get('/favicon.ico', (req: Request, res: Response) => res.sendStatus(204));

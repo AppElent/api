@@ -90,7 +90,6 @@ export const errorHandler = (logger?: any) => (err: Error, req: Request, res: Re
 };
 
 export const httpRedirect = (req: Request, res: Response, next: NextFunction): void => {
-    console.log(req.header);
     if (req.header('x-forwarded-proto') !== 'https') {
         res.redirect(`https://${req.header('host')}${req.url}`);
     } else {
