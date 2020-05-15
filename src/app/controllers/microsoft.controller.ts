@@ -1,20 +1,33 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 const router = express.Router();
 import { Client } from '@microsoft/microsoft-graph-client';
 import 'isomorphic-fetch';
 
-import Cache from '../modules/Cache';
 import { basicAuthentication } from '../middleware/authentication';
-import { cacheMiddleware, asyncHandler } from '../modules/express-collection';
+import { asyncHandler } from '../modules/express-collection';
+import getAccessToken from '../helpers/getAccessToken';
+import { CustomRequest } from '../types/CustomRequest';
 
-const getProfile = async (req: Request, res: Response): Promise<Response> => {
-    const client = Client.init({
-        authProvider: done => {
-            done(null, req.query.access_token as string); //first parameter takes an error if you can't get an access token
-        },
-    });
-    const profile = await client.api('/me').get();
-    return res.send({ success: true, data: profile });
+const getProfile = async (req: CustomRequest, res: Response): Promise<Response> => {
+    try {
+        let token: string = req.query.access_token as string;
+        if (!req.query.access_token) {
+            token = (await getAccessToken(req.uid, 'microsoft', true)).access_token;
+        }
+        if (!token) {
+            return res.status(400).send('No access_token present or supplied');
+        }
+        const client = Client.init({
+            authProvider: done => {
+                done(null, token); //first parameter takes an error if you can't get an access token
+            },
+        });
+        const profile = await client.api('/me').get();
+        return res.send(profile);
+    } catch (err) {
+        console.log(err);
+        throw new Error(err);
+    }
 };
 
 router.use(basicAuthentication);

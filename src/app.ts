@@ -190,6 +190,7 @@ const whitelist = [
     'https://staging.administratie.appelent.com',
 ];
 const corsOptions = {
+    credentials: true,
     origin: function(origin: any, callback: any) {
         if (whitelist.indexOf(origin) !== -1 || !origin) {
             callback(null, true);

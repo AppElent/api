@@ -5,6 +5,7 @@ import SolarEdge, { Period } from 'solaredge';
 import Cache from '../modules/Cache';
 import { basicAuthentication } from '../middleware/authentication';
 import { cacheMiddleware, asyncHandler } from '../modules/express-collection';
+import { sockets } from '../modules/SocketIO';
 
 const solarEdgeCache = new Cache();
 

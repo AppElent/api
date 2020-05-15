@@ -1,9 +1,11 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 const router = express.Router();
 import axios from 'axios';
 
 import { basicAuthentication } from '../middleware/authentication';
 import { asyncHandler } from '../modules/express-collection';
+import getAccessToken from '../helpers/getAccessToken';
+import { CustomRequest } from '../types/CustomRequest';
 
 const host = 'https://my.tado.com';
 
@@ -44,35 +46,71 @@ const test = async (req, res) => {
 };
 */
 
-const me = async (req: Request, res: Response): Promise<Response> => {
+const me = async (req: CustomRequest, res: Response): Promise<Response> => {
     const url = host + '/api/v2/me';
-    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + req.query.access_token } });
-    return res.send({ success: true, data: data.data });
+    let token: string = req.query.access_token as string;
+    if (!req.query.access_token) {
+        token = (await getAccessToken(req.uid, 'tado', true)).access_token;
+    }
+    if (!token) {
+        return res.status(400).send('No access_token present or supplied');
+    }
+    console.log(token, url);
+    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + token } });
+    return res.send(data.data);
 };
 
-const homes = async (req: Request, res: Response): Promise<Response> => {
+const homes = async (req: CustomRequest, res: Response): Promise<Response> => {
+    let token: string = req.query.access_token as string;
+    if (!req.query.access_token) {
+        token = (await getAccessToken(req.uid, 'tado', true)).access_token;
+    }
+    if (!token) {
+        return res.status(400).send('No access_token present or supplied');
+    }
     const url = host + '/api/v2/homes/' + req.params.home;
-    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + req.query.access_token } });
-    return res.send({ success: true, data: data.data });
+    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + token } });
+    return res.send(data.data);
 };
 
-const zones = async (req: Request, res: Response): Promise<Response> => {
+const zones = async (req: CustomRequest, res: Response): Promise<Response> => {
+    let token: string = req.query.access_token as string;
+    if (!req.query.access_token) {
+        token = (await getAccessToken(req.uid, 'tado', true)).access_token;
+    }
+    if (!token) {
+        return res.status(400).send('No access_token present or supplied');
+    }
     const url = host + '/api/v2/homes/' + req.params.home + '/zones';
-    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + req.query.access_token } });
-    return res.send({ success: true, data: data.data });
+    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + token } });
+    return res.send(data.data);
 };
 
-const state = async (req: Request, res: Response): Promise<Response> => {
+const state = async (req: CustomRequest, res: Response): Promise<Response> => {
+    let token: string = req.query.access_token as string;
+    if (!req.query.access_token) {
+        token = (await getAccessToken(req.uid, 'tado', true)).access_token;
+    }
+    if (!token) {
+        return res.status(400).send('No access_token present or supplied');
+    }
     const url = host + '/api/v2/homes/' + req.params.home + '/zones/' + req.params.zone + '/state';
-    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + req.query.access_token } });
-    return res.send({ success: true, data: data.data });
+    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + token } });
+    return res.send(data.data);
 };
 
-const report = async (req: Request, res: Response): Promise<Response> => {
+const report = async (req: CustomRequest, res: Response): Promise<Response> => {
+    let token: string = req.query.access_token as string;
+    if (!req.query.access_token) {
+        token = (await getAccessToken(req.uid, 'tado', true)).access_token;
+    }
+    if (!token) {
+        return res.status(400).send('No access_token present or supplied');
+    }
     const url =
         host + '/api/v2/homes/' + req.params.home + '/zones/' + req.params.zone + '/dayReport/?date=' + req.params.date;
-    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + req.query.access_token } });
-    return res.send({ success: true, data: data.data });
+    const data = await axios.get(url, { headers: { Authorization: 'Bearer ' + token } });
+    return res.send(data.data);
 };
 
 router.use(basicAuthentication);

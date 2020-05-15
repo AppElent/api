@@ -26,13 +26,37 @@ logging.info('HTTPS Poort: ' + httpsPort);
 
 import app from './app';
 //TODO: const debug = require('debug')('backend:server');
-import https from 'https';
+import http from 'http';
 
-app.set('port', httpsPort);
-const server = https.createServer({}, app);
+//app.set('port', httpsPort);
+const server = http.createServer(app);
+import { io, init } from './app/modules/SocketIO';
+init(server);
+/*
+io.on('connection', (socket: any) => {
+    console.log('a user connected', socket.handshake.query);
 
-server.listen(httpsPort);
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+
+    socket.on('test', console.log);
+
+    function timeout(time: number) {
+        setTimeout(function() {
+            // Do Something Here
+            // Then recall the parent function to
+            // create a recursive loop.
+            socket.emit('time', new Date());
+            timeout(time);
+        }, time);
+    }
+    //timeout(1000);
+});
+*/
+
+server.listen(httpPort);
 server.on('error', onError);
 server.on('listening', onListening);
 
-app.listen(httpPort);
+//app.listen(httpPort);
