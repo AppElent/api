@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 const router = express.Router();
 import jwt from 'jsonwebtoken';
 
@@ -15,10 +15,17 @@ import { cacheMiddleware, asyncHandler } from '../modules/express-collection';
 import { logging } from '../modules/Logging';
 import OAuth, { CustomOptions } from '../modules/Oauth';
 import { OauthProvider } from '../models';
+import saveAccessToken from '../helpers/saveAccessToken';
+import { CustomRequest } from '../types/CustomRequest';
+import { sockets } from '../modules/SocketIO';
 
 const oauthCache = new Cache();
 
 const searchedForProvider: Array<string> = [];
+
+sockets.subscribe((socket: any) => {
+    socket.on('test1234', console.log);
+});
 
 const loadOauthProvider = async (key: string): Promise<InstanceType<typeof OAuth>> => {
     const oauthobject = getAppData('oauth.' + key);
@@ -47,7 +54,7 @@ const loadOauthProvider = async (key: string): Promise<InstanceType<typeof OAuth
  * @param req Request object from Express
  * @param res Response object from Express
  */
-const formatUrl = async (req: Request, res: Response): Promise<Response> => {
+const formatUrl = async (req: CustomRequest, res: Response): Promise<Response> => {
     const oauthobject = await loadOauthProvider(req.params.application);
 
     // Authorization oauth2 URI
@@ -68,7 +75,7 @@ const formatUrl = async (req: Request, res: Response): Promise<Response> => {
  * @param req Request object from Express
  * @param res Response object from Express
  */
-const exchange = async (req: Request, res: Response): Promise<Response> => {
+const exchange = async (req: CustomRequest, res: Response): Promise<Response> => {
     const oauthobject = await loadOauthProvider(req.params.application);
 
     let decoded;
@@ -90,6 +97,7 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
             oauthobject.redirectUrl,
             req.body.code,
         );
+        await saveAccessToken(req.params.application, req.uid)(authorizationCode);
         return res.send({ success: true, data: { token: authorizationCode, state: decoded } });
     }
 
@@ -101,8 +109,12 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
         getTokenConfig = { username: req.body.username, password: req.body.password };
     }
     try {
-        const accessToken = await oauthobject.getToken(getTokenConfig);
+        const accessToken = await oauthobject.getToken(
+            getTokenConfig,
+            saveAccessToken(req.params.application, req.uid),
+        );
         console.log(accessToken.token);
+        setAppData('tokens.' + req.uid + '.' + req.params.application, accessToken.token);
         return res.send({ success: true, data: { token: accessToken.token, state: decoded } });
     } catch (error) {
         console.log(error.message, error.output);
@@ -115,7 +127,7 @@ const exchange = async (req: Request, res: Response): Promise<Response> => {
  * @param req
  * @param res
  */
-const receiver = async (req: Request, res: Response): Promise<Response | void> => {
+const receiver = async (req: CustomRequest, res: Response): Promise<Response | void> => {
     const oauthobject = await loadOauthProvider(req.params.application);
 
     if (!req.query.code) {
@@ -149,14 +161,18 @@ const receiver = async (req: Request, res: Response): Promise<Response | void> =
  * @param req Request object from Express
  * @param res Response object from Express
  */
-const refresh = async (req: Request, res: Response): Promise<Response> => {
+const refresh = async (req: CustomRequest, res: Response): Promise<Response> => {
     const oauthobject = await loadOauthProvider(req.params.application);
-
+    const { force, token } = req.body;
     try {
-        const accessToken = await oauthobject.refresh(req.body);
+        const accessToken = await oauthobject.refresh(token, {
+            force,
+            saveFunction: saveAccessToken(req.params.application, req.uid),
+        });
         if (!accessToken) {
             return res.send({ success: true, data: req.body });
         }
+        setAppData('tokens.' + req.uid + '.' + req.params.application, accessToken.token);
         return res.send({ success: true, data: { token: accessToken.token } });
     } catch (error) {
         logging.error(error);

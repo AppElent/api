@@ -46,6 +46,9 @@ app.use('/api/migrations', migrationController);
 import microsoftController from './controllers/microsoft.controller';
 app.use('/api/microsoft', microsoftController);
 
+import googleController from './controllers/google.controller';
+app.use('/api/google', googleController);
+
 //DarkSky
 //app.use('/api/darksky', require('./controllers/darksky.controller'));
 

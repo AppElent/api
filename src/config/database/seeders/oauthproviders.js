@@ -9,10 +9,10 @@ const env = getEnv(process.argv);
 
 const settings = {
     development: {
+        baseUri: 'http://localhost:3000',
         enelogic: {
             id: '5664_623x56if1d8o0gogsg40sg0ksgg8804skoc8s8gwsgwcoc8cc8',
             secret: process.env.ENELOGIC_LOCAL_SECRET,
-            redirectUrl: 'http://localhost:3000/oauth/exchange/enelogic',
         },
         bunq: {
             redirectUrl: 'https://localhost:3000/oauth/exchange/bunq',
@@ -23,57 +23,41 @@ const settings = {
         encryptionKey: process.env.SEQUELIZE_ENCRYPTION_KEY,
     },
     herokudev: {
+        baseUri: 'https://dev.administratie.appelent.com',
         enelogic: {
             id: '7215_2490w4fydvfow08ssww0ggss8084w4kkkkcggsggw88w00cwck',
             secret: process.env.ENELOGIC_DEV_SECRET,
-            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/enelogic',
-        },
-        bunq: {
-            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/bunq',
-        },
-        microsoft: {
-            redirectUrl: 'https://dev.administratie.appelent.com/oauth/exchange/microsoft',
         },
         encryptionKey: process.env.ENCRYPTION_KEY_DEV,
     },
     herokustaging: {
+        baseUri: 'https://staging.administratie.appelent.com',
         enelogic: {
             id: '7216_16ajgg19kark8csw4sss08400soccw4880o448w0cs040s00ow',
             secret: process.env.ENELOGIC_STAGING_SECRET,
-            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/enelogic',
-        },
-        bunq: {
-            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/bunq',
-        },
-        microsoft: {
-            redirectUrl: 'https://staging.administratie.appelent.com/oauth/exchange/microsoft',
         },
         encryptionKey: process.env.ENCRYPTION_KEY_STAGING,
     },
     herokuprod: {
+        baseUri: 'https://administratie.appelent.com',
         enelogic: {
             id: '7017_1ebfcn2fst9cgo8k0sow088ssk8skw4ckck8oo8wkgoc4cocg4',
             secret: process.env.ENELOGIC_PRODUCTION_SECRET,
-            redirectUrl: 'https://administratie.appelent.com/oauth/exchange/enelogic',
-        },
-        bunq: {
-            redirectUrl: 'https://administratie.appelent.com/oauth/exchange/bunq',
-        },
-        microsoft: {
-            redirectUrl: 'https://administratie.appelent.com/oauth/exchange/microsoft',
         },
         encryptionKey: process.env.ENCRYPTION_KEY_PROD,
     },
 };
 
-const encryptionKey = settings[env].encryptionKey;
+const environmentSetting = settings[env];
+
+const encryptionKey = environmentSetting.encryptionKey;
 
 const oauthproviders = [
     {
         id: 'enelogic',
         defaultScope: 'account',
         flow: 'authorization',
-        redirectUrl: settings[env].enelogic.redirectUrl,
+        redirectUrl: environmentSetting.baseUri + '/oauth/exchange/enelogic',
         credentials: getEncryptionString(
             JSON.stringify({
                 auth: {
@@ -94,7 +78,7 @@ const oauthproviders = [
     {
         id: 'bunq',
         flow: 'authorization',
-        redirectUrl: settings[env].bunq.redirectUrl,
+        redirectUrl: environmentSetting.baseUri + '/oauth/exchange/bunq',
         credentials: getEncryptionString(
             JSON.stringify({
                 auth: { tokenHost: 'https://oauth.bunq.com', tokenPath: '/v1/token', authorizePath: '/auth' },
@@ -130,9 +114,9 @@ const oauthproviders = [
     },
     {
         id: 'microsoft',
-        defaultScope: 'openid profile offline_access user.read',
+        defaultScope: 'openid profile offline_access user.read mail.readwrite mailboxsettings.readwrite',
         flow: 'authorization',
-        redirectUrl: settings[env].microsoft.redirectUrl,
+        redirectUrl: environmentSetting.baseUri + '/oauth/exchange/microsoft',
         credentials: getEncryptionString(
             JSON.stringify({
                 auth: {
@@ -143,6 +127,29 @@ const oauthproviders = [
                 client: {
                     id: '617c077e-9051-4972-ad34-eed0417950e1',
                     secret: process.env.MICROSOFT_SECRET,
+                },
+            }),
+            encryptionKey,
+        ),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        id: 'google',
+        defaultScope: 'https://www.googleapis.com/auth/drive',
+        flow: 'authorization',
+        redirectUrl: environmentSetting.baseUri + '/oauth/exchange/google',
+        credentials: getEncryptionString(
+            JSON.stringify({
+                auth: {
+                    tokenHost: 'https://oauth2.googleapis.com',
+                    tokenPath: '/token',
+                    authorizeHost: 'https://accounts.google.com',
+                    authorizePath: '/o/oauth2/v2/auth',
+                },
+                client: {
+                    id: '909589468874-8h29vvvfo00hlesu85hdq2fg3nv6ch3s.apps.googleusercontent.com',
+                    secret: process.env.GOOGLE_SECRET,
                 },
             }),
             encryptionKey,

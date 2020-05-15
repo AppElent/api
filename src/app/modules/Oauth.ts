@@ -53,7 +53,7 @@ export default class Oauth {
         return authorizationUri;
     }
 
-    async getToken(options: AuthorizationTokenConfig | PasswordTokenConfig): Promise<AccessToken> { // eslint-disable-line
+    async getToken(options: AuthorizationTokenConfig | PasswordTokenConfig, saveFunction?: (accesstoken: Token) => Promise<void>): Promise<AccessToken> { // eslint-disable-line
         // Get the access token object (the authorization code is given from the previous step).
         const url = this.redirectUrl;
         // Save the access token
@@ -78,23 +78,32 @@ export default class Oauth {
             result = await this.oauth.ownerPassword.getToken(passwordTokenConfig);
         }
         const accessToken = this.oauth.accessToken.create(result);
+        if (saveFunction) await saveFunction(accessToken.token);
         return accessToken;
     }
 
-    async refresh(accessToken: AccessToken, options?: { force: boolean }): Promise<AccessToken | undefined> {
+    async refresh(
+        accessToken: Token,
+        options?: { force?: boolean; saveFunction?: (accesstoken: Token) => Promise<void> },
+    ): Promise<AccessToken | undefined> {
+        /*
         const tokenObject: Token = {
             access_token: accessToken.token.access_token, // eslint-disable-line
             refresh_token: accessToken.token.refresh_token, // eslint-disable-line
             expires_at: accessToken.token.expires_at, // eslint-disable-line
         };
-        let accessTokenObject: AccessToken = this.oauth.accessToken.create(tokenObject);
-
+        */
+        let accessTokenObject: AccessToken = this.oauth.accessToken.create(accessToken);
         // Check if the token is expired. If expired it is refreshed.
         if (accessTokenObject.expired() || options?.force) {
+            console.log('expired');
             accessTokenObject = await accessTokenObject.refresh();
+            console.log(accessTokenObject);
         } else {
+            console.log('Niet expired');
             return;
         }
+        if (options.saveFunction) await options.saveFunction(accessTokenObject.token);
         return accessTokenObject;
     }
 }
